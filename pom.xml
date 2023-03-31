@@ -21,6 +21,8 @@
 	<properties>
 		<java.version>17</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<kotlin.version>1.8.20-RC</kotlin.version>
+		<maven.compiler.optimze>true</maven.compiler.optimze>
 	</properties>
 	<scm>
 		<connection>scm:git:git@github.com:svenkubiak/WebPush4J.git</connection>
@@ -41,7 +43,6 @@
 					<source>${java.version}</source>
 					<target>${java.version}</target>
 					<debug>false</debug>
-					<optimize>true</optimize>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -204,6 +205,44 @@
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>okhttp</artifactId>
 			<version>4.10.0</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.jetbrains.kotlin</groupId>
+					<artifactId>kotlin-stdlib</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.jetbrains.kotlin</groupId>
+					<artifactId>kotlin-stdlib-common</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.jetbrains.kotlin</groupId>
+					<artifactId>kotlin-stdlib-jdk7</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.jetbrains.kotlin</groupId>
+					<artifactId>kotlin-stdlib-jdk8</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.jetbrains.kotlin</groupId>
+			<artifactId>kotlin-stdlib</artifactId>
+			<version>${kotlin.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jetbrains.kotlin</groupId>
+			<artifactId>kotlin-stdlib-common</artifactId>
+			<version>${kotlin.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jetbrains.kotlin</groupId>
+			<artifactId>kotlin-stdlib-jdk7</artifactId>
+			<version>${kotlin.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jetbrains.kotlin</groupId>
+			<artifactId>kotlin-stdlib-jdk8</artifactId>
+			<version>${kotlin.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
@@ -214,6 +253,12 @@
 			<groupId>org.bitbucket.b_c</groupId>
 			<artifactId>jose4j</artifactId>
 			<version>0.9.3</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-api</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.jayway.jsonpath</groupId>
