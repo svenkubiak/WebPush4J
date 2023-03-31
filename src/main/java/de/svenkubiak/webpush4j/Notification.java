@@ -16,64 +16,20 @@ import de.svenkubiak.webpush4j.enums.Urgency;
 import de.svenkubiak.webpush4j.utils.Utils;
 
 public class Notification {
-    /**
-     * The endpoint associated with the push subscription
-     */
-    private String endpoint;
-
-    /**
-     * The client's public key
-     */
-    private ECPublicKey userPublicKey;
-
-    /**
-     * The client's auth
-     */
-    private byte[] userAuth;
-
-    /**
-     * An arbitrary payload
-     */
-    private byte[] payload;
-
-    /**
-     * Push Message Urgency
-     *
-     *  @see <a href="https://tools.ietf.org/html/rfc8030#section-5.3">Push Message Urgency</a>
-     *
-     */
-    private Urgency urgency;
-
-    /**
-     * Push Message Topic
-     *
-     *  @see <a href="https://tools.ietf.org/html/rfc8030#section-5.4">Replacing Push Messages</a>
-     *
-     */
-    private String topic;
-
-    /**
-     * Time in seconds that the push message is retained by the push service
-     */
-    private int ttl;
-
     private static final int ONE_DAY_DURATION_IN_SECONDS = 86400;
     private static int DEFAULT_TTL = 28 * ONE_DAY_DURATION_IN_SECONDS;
-
-    public Notification(String endpoint, ECPublicKey userPublicKey, byte[] userAuth, byte[] payload, int ttl, Urgency urgency, String topic) {
-        this.endpoint = endpoint;
-        this.userPublicKey = userPublicKey;
-        this.userAuth = userAuth;
-        this.payload = payload;
-        this.ttl = ttl;
-        this.urgency = urgency;
-        this.topic = topic;
-    }
-
+    private String endpoint;
+    private ECPublicKey userPublicKey;
+    private byte[] userAuth;
+    private byte[] payload = {};
+    private Urgency urgency;
+    private String topic;
+    private int ttl;
+    
     private Notification() {
         this.ttl = DEFAULT_TTL;
     }
-    
+
     public static Notification create() {
         return new Notification();
     }
@@ -94,9 +50,23 @@ public class Notification {
     
     public Notification withPayload(String payload) {
         Objects.requireNonNull(payload, "payload can not be null");
-        
         this.payload = payload.getBytes(UTF_8);
         
+        return this;
+    }
+    
+    public Notification withUrgency(Urgency urgency) {
+        this.urgency = Objects.requireNonNull(urgency, "urgency can not be null");
+        return this;
+    }
+    
+    public Notification withTopic(String topic) {
+        this.topic = Objects.requireNonNull(topic, "topic can not be null");
+        return this;
+    }
+    
+    public Notification withTtl(int ttl) {
+        this.ttl = ttl;
         return this;
     }
 
@@ -117,7 +87,7 @@ public class Notification {
     }
 
     public boolean hasPayload() {
-        return getPayload().length > 0;
+        return payload.length > 0;
     }
 
     public boolean hasUrgency() {

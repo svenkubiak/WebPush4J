@@ -1,6 +1,5 @@
 package de.svenkubiak.webpush4j.enums;
 
-
 /**
  * Web Push Message Urgency header field values
  *

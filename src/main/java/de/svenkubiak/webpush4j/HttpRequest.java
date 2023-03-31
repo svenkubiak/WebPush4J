@@ -3,11 +3,8 @@ package de.svenkubiak.webpush4j;
 import java.util.Map;
 
 public class HttpRequest {
-
     private final String url;
-
     private final Map<String, String> headers;
-
     private final byte[] body;
 
     public HttpRequest(String url, Map<String, String> headers, byte[] body) {
@@ -27,5 +24,4 @@ public class HttpRequest {
     public byte[] getBody() {
         return body;
     }
-
 }
