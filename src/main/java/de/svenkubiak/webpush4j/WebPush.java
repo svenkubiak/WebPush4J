@@ -10,7 +10,7 @@ import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.spec.InvalidKeySpecException;
+import java.security.Security;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,6 +18,7 @@ import java.util.Objects;
 
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
 import org.jose4j.jws.AlgorithmIdentifiers;
 import org.jose4j.jws.JsonWebSignature;
@@ -25,6 +26,9 @@ import org.jose4j.jwt.JwtClaims;
 import org.jose4j.lang.JoseException;
 
 import de.svenkubiak.webpush4j.enums.Encoding;
+import de.svenkubiak.webpush4j.exceptions.WebPushException;
+import de.svenkubiak.webpush4j.http.HttpEce;
+import de.svenkubiak.webpush4j.http.HttpRequest;
 import de.svenkubiak.webpush4j.utils.Utils;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
@@ -48,20 +52,21 @@ public class WebPush {
     }
     
     public static WebPush crerate() {
+        Security.addProvider(new BouncyCastleProvider());
         return new WebPush();
     }
     
-    public WebPush withPublicKey(String publicKey) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeySpecException {
+    public WebPush withPublicKey(String publicKey) throws WebPushException {
         this.publicKey = Utils.loadPublicKey(publicKey);
         return this;
     }
     
-    public WebPush withPrivateKey(String privateKey) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeySpecException {
+    public WebPush withPrivateKey(String privateKey) throws WebPushException {
         this.privateKey = Utils.loadPrivateKey(privateKey);
         return this;
     }
 
-    public WebPush withSubject(String subject) throws GeneralSecurityException {
+    public WebPush withSubject(String subject) {
         this.subject = subject;
         return this;
     }
@@ -76,11 +81,11 @@ public class WebPush {
         return this;
     }
     
-    public void send() throws GeneralSecurityException, IOException, JoseException {
+    public void send() throws WebPushException {
         send(Encoding.AES128GCM);
     }
 
-    private void send(Encoding encoding) throws GeneralSecurityException, IOException, JoseException {
+    private void send(Encoding encoding) throws WebPushException {
         Objects.requireNonNull(encoding, "encoding can not be null");
         
         HttpRequest httpRequest = prepareRequest(notification, subscriber, encoding);
@@ -92,7 +97,11 @@ public class WebPush {
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
-          if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+            if (!response.isSuccessful()) {
+                throw new WebPushException("Unexpected response: " + response);
+            }
+        } catch (IOException e) {
+            throw new WebPushException(e);
         }
     }
 
@@ -108,8 +117,13 @@ public class WebPush {
      * @return An Encrypted object containing the public key, salt, and ciphertext.
      * @throws GeneralSecurityException
      */
-    public Encrypted encrypt(byte[] payload, ECPublicKey userPublicKey, byte[] userAuth, Encoding encoding) throws GeneralSecurityException {
-        KeyPair localKeyPair = generateLocalKeyPair();
+    public Encrypted encrypt(byte[] payload, ECPublicKey userPublicKey, byte[] userAuth, Encoding encoding) throws WebPushException {
+        KeyPair localKeyPair;
+        try {
+            localKeyPair = generateLocalKeyPair();
+        } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidAlgorithmParameterException e) {
+            throw new WebPushException(e);
+        }
 
         Map<String, KeyPair> keys = new HashMap<>();
         keys.put(SERVER_KEY_ID, localKeyPair);
@@ -121,7 +135,12 @@ public class WebPush {
         SECURE_RANDOM.nextBytes(salt);
 
         HttpEce httpEce = new HttpEce(keys, labels);
-        byte[] ciphertext = httpEce.encrypt(payload, salt, null, SERVER_KEY_ID, userPublicKey, userAuth, encoding);
+        byte[] ciphertext;
+        try {
+            ciphertext = httpEce.encrypt(payload, salt, null, SERVER_KEY_ID, userPublicKey, userAuth, encoding);
+        } catch (GeneralSecurityException e) {
+            throw new WebPushException(e);
+        }
         
         return new Encrypted(userPublicKey, salt, ciphertext);
     }
@@ -142,10 +161,10 @@ public class WebPush {
         return keyPairGenerator.generateKeyPair();
     }
 
-    protected final HttpRequest prepareRequest(Notification notification, Subscriber subscriber, Encoding encoding) throws GeneralSecurityException, IOException, JoseException {
+    protected final HttpRequest prepareRequest(Notification notification, Subscriber subscriber, Encoding encoding) throws WebPushException {
         if (getPrivateKey() != null && getPublicKey() != null) {
             if (!Utils.verifyKeyPair(getPrivateKey(), getPublicKey())) {
-                throw new IllegalStateException("Public key and private key do not match.");
+                throw new WebPushException("Public key and private key do not match.");
             }
         }
 
@@ -163,7 +182,7 @@ public class WebPush {
         Map<String, String> headers = new HashMap<>();
         byte[] body = null;
 
-        headers.put("TTL", String.valueOf(notification.getTTL()));
+        headers.put("TTL", String.valueOf(notification.getTtl()));
 
         if (notification.hasUrgency()) {
             headers.put("Urgency", notification.getUrgency().getHeaderValue());
@@ -216,12 +235,16 @@ public class WebPush {
 
             byte[] pk = Utils.encode((ECPublicKey) getPublicKey());
 
-            if (encoding == Encoding.AES128GCM) {
-                headers.put("Authorization", "vapid t=" + jws.getCompactSerialization() + ", k=" + Base64.getUrlEncoder().withoutPadding().encodeToString(pk));
-            } else if (encoding == Encoding.AESGCM) {
-                headers.put("Authorization", "WebPush " + jws.getCompactSerialization());
+            try {
+                if (encoding == Encoding.AES128GCM) {
+                    headers.put("Authorization", "vapid t=" + jws.getCompactSerialization() + ", k=" + Base64.getUrlEncoder().withoutPadding().encodeToString(pk));
+                } else if (encoding == Encoding.AESGCM) {
+                    headers.put("Authorization", "WebPush " + jws.getCompactSerialization());
+                }                
+            } catch (JoseException e) {
+                throw new WebPushException(e);
             }
-
+            
             if (headers.containsKey("Crypto-Key")) {
                 headers.put("Crypto-Key", headers.get("Crypto-Key") + ";p256ecdsa=" + Base64.getUrlEncoder().encodeToString(pk));
             } else {

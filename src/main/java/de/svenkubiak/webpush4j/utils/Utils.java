@@ -22,9 +22,15 @@ import org.bouncycastle.math.ec.ECCurve;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.util.BigIntegers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import de.svenkubiak.webpush4j.exceptions.WebPushException;
+
 public class Utils {
-    public static final String CURVE = "prime256v1";
-    public static final String ALGORITHM = "ECDH";
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final String CURVE = "prime256v1";
+    private static final String ALGORITHM = "ECDH";
 
     /**
      * Get the uncompressed encoding of the public key point. The resulting array
@@ -44,9 +50,13 @@ public class Utils {
      *
      * @param encodedPublicKey
      */
-    public static PublicKey loadPublicKey(String encodedPublicKey) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeySpecException {
+    public static PublicKey loadPublicKey(String encodedPublicKey) throws WebPushException {
         byte[] decodedPublicKey = Base64.getUrlDecoder().decode(encodedPublicKey);
-        return loadPublicKey(decodedPublicKey);
+        try {
+            return loadPublicKey(decodedPublicKey);
+        } catch (NoSuchProviderException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new WebPushException(e);
+        }
     }
 
     /**
@@ -73,9 +83,13 @@ public class Utils {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeySpecException
      */
-    public static PrivateKey loadPrivateKey(String encodedPrivateKey) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeySpecException {
+    public static PrivateKey loadPrivateKey(String encodedPrivateKey) throws WebPushException {
         byte[] decodedPrivateKey = Base64.getUrlDecoder().decode(encodedPrivateKey);
-        return loadPrivateKey(decodedPrivateKey);
+        try {
+            return loadPrivateKey(decodedPrivateKey);
+        } catch (NoSuchProviderException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new WebPushException(e);
+        }
     }
 
     /**
@@ -161,5 +175,15 @@ public class Utils {
         buffer.putInt(integer);
 
         return buffer.array();
+    }
+    
+    public static byte[] toJson(Object object) {
+        try {
+            return objectMapper.writeValueAsBytes(object);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        
+        return new byte[0];
     }
 }

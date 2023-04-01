@@ -1,4 +1,4 @@
-package de.svenkubiak.webpush4j;
+package de.svenkubiak.webpush4j.http;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static javax.crypto.Cipher.DECRYPT_MODE;

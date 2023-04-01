@@ -1,18 +1,19 @@
 package de.svenkubiak.webpush4j;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import de.svenkubiak.webpush4j.enums.Urgency;
+import de.svenkubiak.webpush4j.utils.Utils;
 
 public class Notification {
     private static final int ONE_DAY_DURATION_IN_SECONDS = 86400;
     private static int DEFAULT_TTL = 28 * ONE_DAY_DURATION_IN_SECONDS;
-    private byte[] payload = {};
+    private Map<String, String> payload = new HashMap<>();
     private Urgency urgency;
-    private String topic;
     private int ttl;
+    private String topic;
     
     private Notification() {
         this.ttl = DEFAULT_TTL;
@@ -20,13 +21,6 @@ public class Notification {
 
     public static Notification create() {
         return new Notification();
-    }
-    
-    public Notification withPayload(String payload) {
-        Objects.requireNonNull(payload, "payload can not be null");
-        this.payload = payload.getBytes(UTF_8);
-        
-        return this;
     }
     
     public Notification withUrgency(Urgency urgency) {
@@ -43,13 +37,27 @@ public class Notification {
         this.ttl = ttl;
         return this;
     }
+    
+    public Notification withBody(String body) {
+        Objects.requireNonNull(body, "body can not be null");
+        payload.put("body", body);
+
+        return this;
+    }
+    
+    public Notification withTitle(String title) {
+        Objects.requireNonNull(title, "title can not be null");
+        payload.put("title", title);
+
+        return this;
+    }
 
     public byte[] getPayload() {
-        return payload;
+        return Utils.toJson(payload);
     }
 
     public boolean hasPayload() {
-        return payload.length > 0;
+        return !payload.isEmpty();
     }
 
     public boolean hasUrgency() {
@@ -60,7 +68,7 @@ public class Notification {
         return topic != null;
     }
 
-    public int getTTL() {
+    public int getTtl() {
         return ttl;
     }
 

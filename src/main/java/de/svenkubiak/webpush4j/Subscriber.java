@@ -7,6 +7,8 @@ import java.util.Objects;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 
+import de.svenkubiak.webpush4j.exceptions.WebPushException;
+
 public class Subscriber {
     private String endpoint;
     private String p256dh;
@@ -49,8 +51,13 @@ public class Subscriber {
         return endpoint.indexOf("https://fcm.googleapis.com/fcm/send") == 0;
     }
 
-    public String getOrigin() throws MalformedURLException {
-        URL url = new URL(endpoint);
-        return url.getProtocol() + "://" + url.getHost();
+    public String getOrigin() throws WebPushException {
+        URL url;
+        try {
+            url = new URL(endpoint);
+            return url.getProtocol() + "://" + url.getHost();
+        } catch (MalformedURLException e) {
+            throw new WebPushException(e);
+        }
     }
 }
