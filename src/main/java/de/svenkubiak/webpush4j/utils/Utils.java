@@ -13,7 +13,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
 
 import org.bouncycastle.jce.ECNamedCurveTable;
-import org.bouncycastle.jce.interfaces.ECPrivateKey;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
 import org.bouncycastle.jce.spec.ECParameterSpec;
@@ -37,10 +36,6 @@ public class Utils {
      */
     public static byte[] encode(ECPublicKey publicKey) {
         return publicKey.getQ().getEncoded(false);
-    }
-
-    public static byte[] encode(ECPrivateKey privateKey) {
-        return privateKey.getD().toByteArray();
     }
 
     /**
@@ -99,23 +94,6 @@ public class Utils {
         KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM, PROVIDER_NAME);
 
         return keyFactory.generatePrivate(privateKeySpec);
-    }
-
-    /**
-     * Load a public key from the private key.
-     *
-     * @param privateKey
-     * @return
-     */
-    public static ECPublicKey loadPublicKey(ECPrivateKey privateKey) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeySpecException {
-        KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM, PROVIDER_NAME);
-        ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec(CURVE);
-        ECPoint Q = ecSpec.getG().multiply(privateKey.getD());
-        byte[] publicDerBytes = Q.getEncoded(false);
-        ECPoint point = ecSpec.getCurve().decodePoint(publicDerBytes);
-        ECPublicKeySpec pubSpec = new ECPublicKeySpec(point, ecSpec);
-
-        return (ECPublicKey) keyFactory.generatePublic(pubSpec);
     }
 
     /**

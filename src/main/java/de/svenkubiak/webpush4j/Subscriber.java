@@ -1,5 +1,7 @@
 package de.svenkubiak.webpush4j;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Objects;
 
 import com.jayway.jsonpath.DocumentContext;
@@ -19,10 +21,10 @@ public class Subscriber {
     public static Subscriber from(String json) {
         Objects.requireNonNull(json, "json can not be null");
         
-        DocumentContext jsonContext = JsonPath.parse(json);
-        String endpoint = jsonContext.read("$.endpoint");
-        String p256dh = jsonContext.read("$.keys.p256dh");
-        String auth = jsonContext.read("$.keys.auth");
+        DocumentContext documentContext = JsonPath.parse(json);
+        String endpoint = documentContext.read("$.endpoint");
+        String p256dh = documentContext.read("$.keys.p256dh");
+        String auth = documentContext.read("$.keys.auth");
         
         return new Subscriber(endpoint, p256dh, auth);
     }
@@ -37,5 +39,18 @@ public class Subscriber {
 
     public String getAuth() {
         return auth;
+    }
+    
+    public boolean isGcm() {
+        return endpoint.indexOf("https://android.googleapis.com/gcm/send") == 0;
+    }
+
+    public boolean isFcm() {
+        return endpoint.indexOf("https://fcm.googleapis.com/fcm/send") == 0;
+    }
+
+    public String getOrigin() throws MalformedURLException {
+        URL url = new URL(endpoint);
+        return url.getProtocol() + "://" + url.getHost();
     }
 }

@@ -14,6 +14,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
@@ -36,71 +37,53 @@ public class WebPush {
     private static final String SERVER_KEY_ID = "server-key-id";
     private static final String SERVER_KEY_CURVE = "P-256";
     private final OkHttpClient client = new OkHttpClient();
-    
-    /**
-     * The Google Cloud Messaging API key (for pre-VAPID in Chrome)
-     */
     private String gcmApiKey;
-
-    /**
-     * Subject used in the JWT payload (for VAPID). When left as null, then no subject will be used
-     * (RFC-8292 2.1 says that it is optional)
-     */
     private String subject;
-
-    /**
-     * The public key (for VAPID)
-     */
     private PublicKey publicKey;
-
-    /**
-     * The private key (for VAPID)
-     */
     private PrivateKey privateKey;
+    private Subscriber subscriber;
+    private Notification notification;
+    
+    public WebPush() {
+    }
     
     public static WebPush crerate() {
         return new WebPush();
     }
     
-    public WebPush withGcmApiKey(String gcmApiKey) {
-        this.gcmApiKey = gcmApiKey;
-        return this;
-    }
-    
-    public WebPush withKeyPair(KeyPair keyPair) {
-        this.publicKey = keyPair.getPublic();
-        this.privateKey = keyPair.getPrivate();
-        
-        return this;
-    }
-    
     public WebPush withPublicKey(String publicKey) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeySpecException {
         this.publicKey = Utils.loadPublicKey(publicKey);
-        
         return this;
     }
     
     public WebPush withPrivateKey(String privateKey) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeySpecException {
         this.privateKey = Utils.loadPrivateKey(privateKey);
-        
         return this;
     }
 
     public WebPush withSubject(String subject) throws GeneralSecurityException {
         this.subject = subject;
-        
+        return this;
+    }
+
+    public WebPush withSubscriber(Subscriber subscriber) {
+        this.subscriber = Objects.requireNonNull(subscriber, "subscriber can not be null");
+        return this;
+    }
+
+    public WebPush withNotification(Notification notification) {
+        this.notification = Objects.requireNonNull(notification, "notification can not be null");
         return this;
     }
     
-    public WebPush() {
-    }
-    
-    public void send(Notification notification) throws GeneralSecurityException, IOException, JoseException {
-        send(notification, Encoding.AES128GCM);
+    public void send() throws GeneralSecurityException, IOException, JoseException {
+        send(Encoding.AES128GCM);
     }
 
-    private void send(Notification notification, Encoding encoding) throws GeneralSecurityException, IOException, JoseException {
-        HttpRequest httpRequest = prepareRequest(notification, encoding);
+    private void send(Encoding encoding) throws GeneralSecurityException, IOException, JoseException {
+        Objects.requireNonNull(encoding, "encoding can not be null");
+        
+        HttpRequest httpRequest = prepareRequest(notification, subscriber, encoding);
         
         Request request = new Request.Builder()
                 .url(httpRequest.getUrl())
@@ -125,7 +108,7 @@ public class WebPush {
      * @return An Encrypted object containing the public key, salt, and ciphertext.
      * @throws GeneralSecurityException
      */
-    public static Encrypted encrypt(byte[] payload, ECPublicKey userPublicKey, byte[] userAuth, Encoding encoding) throws GeneralSecurityException {
+    public Encrypted encrypt(byte[] payload, ECPublicKey userPublicKey, byte[] userAuth, Encoding encoding) throws GeneralSecurityException {
         KeyPair localKeyPair = generateLocalKeyPair();
 
         Map<String, KeyPair> keys = new HashMap<>();
@@ -139,12 +122,8 @@ public class WebPush {
 
         HttpEce httpEce = new HttpEce(keys, labels);
         byte[] ciphertext = httpEce.encrypt(payload, salt, null, SERVER_KEY_ID, userPublicKey, userAuth, encoding);
-
-        return new Encrypted.Builder()
-                .withSalt(salt)
-                .withPublicKey(localKeyPair.getPublic())
-                .withCiphertext(ciphertext)
-                .build();
+        
+        return new Encrypted(userPublicKey, salt, ciphertext);
     }
 
     /**
@@ -163,7 +142,7 @@ public class WebPush {
         return keyPairGenerator.generateKeyPair();
     }
 
-    protected final HttpRequest prepareRequest(Notification notification, Encoding encoding) throws GeneralSecurityException, IOException, JoseException {
+    protected final HttpRequest prepareRequest(Notification notification, Subscriber subscriber, Encoding encoding) throws GeneralSecurityException, IOException, JoseException {
         if (getPrivateKey() != null && getPublicKey() != null) {
             if (!Utils.verifyKeyPair(getPrivateKey(), getPublicKey())) {
                 throw new IllegalStateException("Public key and private key do not match.");
@@ -172,15 +151,15 @@ public class WebPush {
 
         Encrypted encrypted = encrypt(
                 notification.getPayload(),
-                notification.getUserPublicKey(),
-                notification.getUserAuth(),
+                (ECPublicKey) Utils.loadPublicKey(subscriber.getP256dh()),
+                Base64.getUrlDecoder().decode(subscriber.getAuth()),
                 encoding
         );
 
         byte[] dh = Utils.encode((ECPublicKey) encrypted.getPublicKey());
         byte[] salt = encrypted.getSalt();
 
-        String url = notification.getEndpoint();
+        String url = subscriber.getEndpoint();
         Map<String, String> headers = new HashMap<>();
         byte[] body = null;
 
@@ -193,7 +172,6 @@ public class WebPush {
         if (notification.hasTopic()) {
             headers.put("Topic", notification.getTopic());
         }
-
 
         if (notification.hasPayload()) {
             headers.put("Content-Type", "application/octet-stream");
@@ -209,7 +187,7 @@ public class WebPush {
             body = encrypted.getCiphertext();
         }
 
-        if (notification.isGcm()) {
+        if (subscriber.isGcm()) {
             if (getGcmApiKey() == null) {
                 throw new IllegalStateException("An GCM API key is needed to send a push notification to a GCM endpoint.");
             }
@@ -217,13 +195,13 @@ public class WebPush {
             headers.put("Authorization", "key=" + getGcmApiKey());
         } else if (vapidEnabled()) {
             if (encoding == Encoding.AES128GCM) {
-                if (notification.getEndpoint().startsWith("https://fcm.googleapis.com")) {
-                    url = notification.getEndpoint().replace("fcm/send", "wp");
+                if (subscriber.getEndpoint().startsWith("https://fcm.googleapis.com")) {
+                    url = subscriber.getEndpoint().replace("fcm/send", "wp");
                 }
             }
 
             JwtClaims claims = new JwtClaims();
-            claims.setAudience(notification.getOrigin());
+            claims.setAudience(subscriber.getOrigin());
             claims.setExpirationTimeMinutesInTheFuture(12 * 60);
             if (getSubject() != null) {
                 claims.setSubject(getSubject());
@@ -249,24 +227,11 @@ public class WebPush {
             } else {
                 headers.put("Crypto-Key", "p256ecdsa=" + Base64.getUrlEncoder().encodeToString(pk));
             }
-        } else if (notification.isFcm() && getGcmApiKey() != null) {
+        } else if (subscriber.isFcm() && getGcmApiKey() != null) {
             headers.put("Authorization", "key=" + getGcmApiKey());
         }
 
         return new HttpRequest(url, headers, body);
-    }
-
-    /**
-     * Set the Google Cloud Messaging (GCM) API key
-     *
-     * @param gcmApiKey
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public <T> T setGcmApiKey(String gcmApiKey) {
-        this.gcmApiKey = gcmApiKey;
-
-        return (T) this;
     }
 
     public String getGcmApiKey() {
@@ -277,103 +242,15 @@ public class WebPush {
         return subject;
     }
 
-    /**
-     * Set the JWT subject (for VAPID)
-     *
-     * @param subject
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public <T> T setSubject(String subject) {
-        this.subject = subject;
-
-        return (T) this;
-    }
-
-    /**
-     * Set the public and private key (for VAPID).
-     *
-     * @param keyPair
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public <T> T setKeyPair(KeyPair keyPair) {
-        setPublicKey(keyPair.getPublic());
-        setPrivateKey(keyPair.getPrivate());
-
-        return (T) this;
-    }
-
     public PublicKey getPublicKey() {
         return publicKey;
-    }
-
-    /**
-     * Set the public key using a base64url-encoded string.
-     *
-     * @param publicKey
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public <T> T setPublicKey(String publicKey) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
-        setPublicKey(Utils.loadPublicKey(publicKey));
-
-        return (T) this;
     }
 
     public PrivateKey getPrivateKey() {
         return privateKey;
     }
 
-    public KeyPair getKeyPair() {
-        return new KeyPair(publicKey, privateKey);
-    }
-
-    /**
-     * Set the public key (for VAPID)
-     *
-     * @param publicKey
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public <T> T setPublicKey(PublicKey publicKey) {
-        this.publicKey = publicKey;
-
-        return (T) this;
-    }
-
-    /**
-     * Set the public key using a base64url-encoded string.
-     *
-     * @param privateKey
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public <T> T setPrivateKey(String privateKey) throws NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
-        setPrivateKey(Utils.loadPrivateKey(privateKey));
-
-        return (T) this;
-    }
-
-    /**
-     * Set the private key (for VAPID)
-     *
-     * @param privateKey
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public <T> T setPrivateKey(PrivateKey privateKey) {
-        this.privateKey = privateKey;
-
-        return (T) this;
-    }
-
-    /**
-     * Check if VAPID is enabled
-     *
-     * @return
-     */
-    protected boolean vapidEnabled() {
+    public boolean vapidEnabled() {
         return publicKey != null && privateKey != null;
     }
 }
