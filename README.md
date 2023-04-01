@@ -19,7 +19,7 @@ Usage
 
 1. Add the WebPush4J dependency to your pom.xml:
 
-```
+```xml
 <dependency>
     <groupId>de.svenkubiak</groupId>
     <artifactId>webpush4j</artifactId>
@@ -29,7 +29,7 @@ Usage
 
 2. Start by creating a WebPush instance
 
-```
+```java
 WebPush webPush = WebPush.crerate()
   .withPublicKey("PUBLIC KEY") //Vapid public key
   .withPrivateKey("PRIVATE KEY") //Vapid private key
@@ -38,14 +38,14 @@ WebPush webPush = WebPush.crerate()
 
 3. Create a Subscriber or load from e.g. database
 
-```
+```java
 String json = ... //Json from initial subscription
 Subscriber subscriber = Subscriber.from(json);
 ```	
 
 4. Create a notification
 
-```
+```java
 Notification notification = Notification.create()
     .withTitle("Hello!!")
     .withBody("New Message from your favorite Server.");
@@ -53,7 +53,7 @@ Notification notification = Notification.create()
 
 5. Send the notification to the subscriber
 
-```
+```java
 try {
     webPush
         .withSubscriber(subscriber)
@@ -64,9 +64,9 @@ try {
 }
 ```	
 
-Full Example
+Full example
 
-```
+```java
 import de.svenkubiak.webpush4j.Notification;
 import de.svenkubiak.webpush4j.Subscriber;
 import de.svenkubiak.webpush4j.WebPush;
