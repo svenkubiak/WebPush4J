@@ -43,6 +43,8 @@ public class WebPush {
     private final OkHttpClient client = new OkHttpClient();
     private String gcmApiKey;
     private String subject;
+    private String publKey;
+    private String privKey;
     private PublicKey publicKey;
     private PrivateKey privateKey;
     private Subscriber subscriber;
@@ -56,13 +58,13 @@ public class WebPush {
         return new WebPush();
     }
     
-    public WebPush withPublicKey(String publicKey) throws WebPushException {
-        this.publicKey = Utils.loadPublicKey(publicKey);
+    public WebPush withPublicKey(String publicKey) {
+        this.publKey = Objects.requireNonNull(publicKey, "publicKey can not be null");
         return this;
     }
     
-    public WebPush withPrivateKey(String privateKey) throws WebPushException {
-        this.privateKey = Utils.loadPrivateKey(privateKey);
+    public WebPush withPrivateKey(String privateKey) {
+        this.privKey = Objects.requireNonNull(privateKey, "privateKey can not be null");
         return this;
     }
 
@@ -88,6 +90,9 @@ public class WebPush {
     private void send(Encoding encoding) throws WebPushException {
         Objects.requireNonNull(encoding, "encoding can not be null");
         
+        publicKey = Utils.loadPublicKey(publKey);
+        privateKey = Utils.loadPrivateKey(privKey);
+        
         HttpRequest httpRequest = prepareRequest(notification, subscriber, encoding);
         
         Request request = new Request.Builder()
@@ -105,18 +110,6 @@ public class WebPush {
         }
     }
 
-    /**
-     * Encrypt the payload.
-     *
-     * Encryption uses Elliptic curve Diffie-Hellman (ECDH) cryptography over the prime256v1 curve.
-     *
-     * @param payload       Payload to encrypt.
-     * @param userPublicKey The user agent's public key (keys.p256dh).
-     * @param userAuth      The user agent's authentication secret (keys.auth).
-     * @param encoding
-     * @return An Encrypted object containing the public key, salt, and ciphertext.
-     * @throws GeneralSecurityException
-     */
     public Encrypted encrypt(byte[] payload, ECPublicKey userPublicKey, byte[] userAuth, Encoding encoding) throws WebPushException {
         KeyPair localKeyPair;
         try {

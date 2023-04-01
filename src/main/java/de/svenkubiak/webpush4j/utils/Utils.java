@@ -32,24 +32,10 @@ public class Utils {
     private static final String CURVE = "prime256v1";
     private static final String ALGORITHM = "ECDH";
 
-    /**
-     * Get the uncompressed encoding of the public key point. The resulting array
-     * should be 65 bytes length and start with 0x04 followed by the x and y
-     * coordinates (32 bytes each).
-     *
-     * @param publicKey
-     * @return
-     */
     public static byte[] encode(ECPublicKey publicKey) {
         return publicKey.getQ().getEncoded(false);
     }
 
-    /**
-     * Load the public key from a URL-safe base64 encoded string. Takes into
-     * account the different encodings, including point compression.
-     *
-     * @param encodedPublicKey
-     */
     public static PublicKey loadPublicKey(String encodedPublicKey) throws WebPushException {
         byte[] decodedPublicKey = Base64.getUrlDecoder().decode(encodedPublicKey);
         try {
@@ -59,11 +45,6 @@ public class Utils {
         }
     }
 
-    /**
-     * Load the public key from a byte array. 
-     *
-     * @param decodedPublicKey
-     */
     public static PublicKey loadPublicKey(byte[] decodedPublicKey) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeySpecException {
         KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM, PROVIDER_NAME);
         ECParameterSpec parameterSpec = ECNamedCurveTable.getParameterSpec(CURVE);
@@ -74,15 +55,6 @@ public class Utils {
         return keyFactory.generatePublic(pubSpec);
     }
 
-    /**
-     * Load the private key from a URL-safe base64 encoded string
-     *
-     * @param encodedPrivateKey
-     * @return
-     * @throws NoSuchProviderException
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidKeySpecException
-     */
     public static PrivateKey loadPrivateKey(String encodedPrivateKey) throws WebPushException {
         byte[] decodedPrivateKey = Base64.getUrlDecoder().decode(encodedPrivateKey);
         try {
@@ -92,15 +64,6 @@ public class Utils {
         }
     }
 
-    /**
-     * Load the private key from a byte array
-     *
-     * @param decodedPrivateKey
-     * @return
-     * @throws NoSuchProviderException
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidKeySpecException
-     */
     public static PrivateKey loadPrivateKey(byte[] decodedPrivateKey) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeySpecException {
         BigInteger s = BigIntegers.fromUnsignedByteArray(decodedPrivateKey);
         ECParameterSpec parameterSpec = ECNamedCurveTable.getParameterSpec(CURVE);
@@ -110,13 +73,6 @@ public class Utils {
         return keyFactory.generatePrivate(privateKeySpec);
     }
 
-    /**
-     * Verify that the private key belongs to the public key.
-     *
-     * @param privateKey
-     * @param publicKey
-     * @return
-     */
     public static boolean verifyKeyPair(PrivateKey privateKey, PublicKey publicKey) {
         ECNamedCurveParameterSpec curveParameters = ECNamedCurveTable.getParameterSpec(CURVE);
         ECPoint g = curveParameters.getG();
@@ -125,9 +81,6 @@ public class Utils {
         return sG.equals(((ECPublicKey) publicKey).getQ());
     }
 
-    /**
-     * Utility to concat byte arrays
-     */
     public static byte[] concat(byte[]... arrays) {
         int lastPos = 0;
 
@@ -146,9 +99,6 @@ public class Utils {
         return combined;
     }
 
-    /**
-     * Compute combined array length
-     */
     public static int combinedLength(byte[]... arrays) {
         int combinedLength = 0;
 
@@ -163,13 +113,6 @@ public class Utils {
         return combinedLength;
     }
 
-    /**
-     * Create a byte array of the given length from the given integer.
-     *
-     * @param integer
-     * @param size
-     * @return
-     */
     public static byte[] toByteArray(int integer, int size) {
         ByteBuffer buffer = ByteBuffer.allocate(size);
         buffer.putInt(integer);
