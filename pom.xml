@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.svenkubiak</groupId>
 	<artifactId>webpush4j</artifactId>
-	<version>1.0.0-Alpha2</version>
+	<version>1.0.0-Alpha3-SNAPSHOT</version>
 	<licenses>
 		<license>
 			<name>The Apache Software License, Version 2.0</name>
@@ -26,7 +26,7 @@
 		<connection>scm:git:git@github.com:svenkubiak/WebPush4J.git</connection>
 		<developerConnection>scm:git:git@github.com:svenkubiak/WebPush4J.git</developerConnection>
 		<url>git@github.com:svenkubiak/WebPush4J.git</url>
-		<tag>1.0.0-Alpha2</tag>
+		<tag>HEAD</tag>
 	</scm>
 	<name>WebPush4J</name>
 	<description>lore ipsum</description>
