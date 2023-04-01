@@ -10,7 +10,7 @@ Refactored and improved version of [WebPush](https://github.com/web-push-libs/we
 - Reduced code, cleanups and refactorings
 - Fluent API
 
-Status: Early development.
+Status: Early development/refactoring.
 
 Requires Java 17.
 
@@ -65,6 +65,7 @@ try {
 ```	
 
 Full example
+------------------
 
 ```java
 import de.svenkubiak.webpush4j.Notification;
