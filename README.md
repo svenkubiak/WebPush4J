@@ -10,7 +10,7 @@ Refactored and improved version of [WebPush](https://github.com/web-push-libs/we
 - Reduced code, cleanups and refactorings
 - Fluent API
 
-Status: Early development/refactoring.
+Status: Beta.
 
 Requires Java 17.
 
@@ -53,12 +53,29 @@ Notification notification = Notification.create()
 
 5. Send the notification to the subscriber
 
+Synchronous
+
 ```java
 try {
     webPush
         .withSubscriber(subscriber)
         .withNotification(notification)
         .send();
+} catch (WebPushException e) {
+    e.printStackTrace();
+}
+```	
+
+Asynchronous
+
+```java
+
+Callback callback = ... //OkHttp callback
+try {
+    webPush
+        .withSubscriber(subscriber)
+        .withNotification(notification)
+        .sendAsync(callback);
 } catch (WebPushException e) {
     e.printStackTrace();
 }

@@ -8,8 +8,8 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-import de.svenkubiak.webpush4j.Notification;
 import de.svenkubiak.webpush4j.enums.Urgency;
+import de.svenkubiak.webpush4j.models.Notification;
 
 public class TestNotification {
 

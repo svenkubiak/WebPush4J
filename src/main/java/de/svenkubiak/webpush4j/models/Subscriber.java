@@ -1,4 +1,4 @@
-package de.svenkubiak.webpush4j;
+package de.svenkubiak.webpush4j.models;
 
 import java.net.MalformedURLException;
 import java.net.URL;

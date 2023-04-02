@@ -1,4 +1,4 @@
-package de.svenkubiak.webpush4j;
+package de.svenkubiak.webpush4j.models;
 
 import java.security.PublicKey;
 import java.util.Objects;

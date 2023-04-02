@@ -4,13 +4,20 @@ import static org.bouncycastle.jce.provider.BouncyCastleProvider.PROVIDER_NAME;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.security.GeneralSecurityException;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
@@ -25,9 +32,14 @@ import org.bouncycastle.util.BigIntegers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.svenkubiak.webpush4j.enums.Encoding;
 import de.svenkubiak.webpush4j.exceptions.WebPushException;
+import de.svenkubiak.webpush4j.models.Encrypted;
 
 public class Utils {
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final String SERVER_KEY_ID = "server-key-id";
+    private static final String SERVER_KEY_CURVE = "P-256";
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final String CURVE = "prime256v1";
     private static final String ALGORITHM = "ECDH";
@@ -54,6 +66,34 @@ public class Utils {
 
         return keyFactory.generatePublic(pubSpec);
     }
+    
+    public static Encrypted encrypt(byte[] payload, ECPublicKey userPublicKey, byte[] userAuth, Encoding encoding) throws WebPushException {
+        KeyPair localKeyPair;
+        try {
+            localKeyPair = Utils.generateLocalKeyPair();
+        } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidAlgorithmParameterException e) {
+            throw new WebPushException(e);
+        }
+
+        Map<String, KeyPair> keys = new HashMap<>();
+        keys.put(SERVER_KEY_ID, localKeyPair);
+
+        Map<String, String> labels = new HashMap<>();
+        labels.put(SERVER_KEY_ID, SERVER_KEY_CURVE);
+
+        byte[] salt = new byte[16];
+        SECURE_RANDOM.nextBytes(salt);
+
+        Ece httpEce = new Ece(keys, labels);
+        byte[] ciphertext;
+        try {
+            ciphertext = httpEce.encrypt(payload, salt, null, SERVER_KEY_ID, userPublicKey, userAuth, encoding);
+        } catch (GeneralSecurityException e) {
+            throw new WebPushException(e);
+        }
+        
+        return new Encrypted(userPublicKey, salt, ciphertext);
+    }
 
     public static PrivateKey loadPrivateKey(String encodedPrivateKey) throws WebPushException {
         byte[] decodedPrivateKey = Base64.getUrlDecoder().decode(encodedPrivateKey);
@@ -79,6 +119,14 @@ public class Utils {
         ECPoint sG = g.multiply(((java.security.interfaces.ECPrivateKey) privateKey).getS());
 
         return sG.equals(((ECPublicKey) publicKey).getQ());
+    }
+
+    public static KeyPair generateLocalKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+        ECNamedCurveParameterSpec parameterSpec = ECNamedCurveTable.getParameterSpec("prime256v1");
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("ECDH", "BC");
+        keyPairGenerator.initialize(parameterSpec);
+
+        return keyPairGenerator.generateKeyPair();
     }
 
     public static byte[] concat(byte[]... arrays) {

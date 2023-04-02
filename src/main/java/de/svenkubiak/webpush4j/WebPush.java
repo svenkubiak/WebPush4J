@@ -1,25 +1,15 @@
 package de.svenkubiak.webpush4j;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.SecureRandom;
 import java.security.Security;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import org.bouncycastle.jce.ECNamedCurveTable;
+import org.apache.commons.lang3.StringUtils;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
 import org.jose4j.jws.AlgorithmIdentifiers;
 import org.jose4j.jws.JsonWebSignature;
 import org.jose4j.jwt.JwtClaims;
@@ -27,9 +17,12 @@ import org.jose4j.lang.JoseException;
 
 import de.svenkubiak.webpush4j.enums.Encoding;
 import de.svenkubiak.webpush4j.exceptions.WebPushException;
-import de.svenkubiak.webpush4j.http.HttpEce;
-import de.svenkubiak.webpush4j.http.HttpRequest;
+import de.svenkubiak.webpush4j.models.Encrypted;
+import de.svenkubiak.webpush4j.models.HttpRequest;
+import de.svenkubiak.webpush4j.models.Notification;
+import de.svenkubiak.webpush4j.models.Subscriber;
 import de.svenkubiak.webpush4j.utils.Utils;
+import okhttp3.Callback;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -37,16 +30,11 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class WebPush {
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
-    private static final String SERVER_KEY_ID = "server-key-id";
-    private static final String SERVER_KEY_CURVE = "P-256";
     private final OkHttpClient client = new OkHttpClient();
     private String gcmApiKey;
     private String subject;
-    private String publKey;
-    private String privKey;
-    private PublicKey publicKey;
-    private PrivateKey privateKey;
+    private String publicKey;
+    private String privateKey;
     private Subscriber subscriber;
     private Notification notification;
     
@@ -59,12 +47,12 @@ public class WebPush {
     }
     
     public WebPush withPublicKey(String publicKey) {
-        this.publKey = Objects.requireNonNull(publicKey, "publicKey can not be null");
+        this.publicKey = Objects.requireNonNull(publicKey, "publicKey can not be null");
         return this;
     }
     
     public WebPush withPrivateKey(String privateKey) {
-        this.privKey = Objects.requireNonNull(privateKey, "privateKey can not be null");
+        this.privateKey = Objects.requireNonNull(privateKey, "privateKey can not be null");
         return this;
     }
 
@@ -87,11 +75,8 @@ public class WebPush {
         send(Encoding.AES128GCM);
     }
 
-    private void send(Encoding encoding) throws WebPushException {
+    public void send(Encoding encoding) throws WebPushException {
         Objects.requireNonNull(encoding, "encoding can not be null");
-        
-        publicKey = Utils.loadPublicKey(publKey);
-        privateKey = Utils.loadPrivateKey(privKey);
         
         HttpRequest httpRequest = prepareRequest(notification, subscriber, encoding);
         
@@ -109,59 +94,36 @@ public class WebPush {
             throw new WebPushException(e);
         }
     }
-
-    public Encrypted encrypt(byte[] payload, ECPublicKey userPublicKey, byte[] userAuth, Encoding encoding) throws WebPushException {
-        KeyPair localKeyPair;
-        try {
-            localKeyPair = generateLocalKeyPair();
-        } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidAlgorithmParameterException e) {
-            throw new WebPushException(e);
-        }
-
-        Map<String, KeyPair> keys = new HashMap<>();
-        keys.put(SERVER_KEY_ID, localKeyPair);
-
-        Map<String, String> labels = new HashMap<>();
-        labels.put(SERVER_KEY_ID, SERVER_KEY_CURVE);
-
-        byte[] salt = new byte[16];
-        SECURE_RANDOM.nextBytes(salt);
-
-        HttpEce httpEce = new HttpEce(keys, labels);
-        byte[] ciphertext;
-        try {
-            ciphertext = httpEce.encrypt(payload, salt, null, SERVER_KEY_ID, userPublicKey, userAuth, encoding);
-        } catch (GeneralSecurityException e) {
-            throw new WebPushException(e);
-        }
+    
+    public void sendAsync(Callback callback) throws WebPushException {
+        sendAsync(Encoding.AES128GCM, callback);
+    }
+    
+    public void sendAsync(Encoding encoding, Callback callback) throws WebPushException {
+        Objects.requireNonNull(encoding, "encoding can not be null");
         
-        return new Encrypted(userPublicKey, salt, ciphertext);
+        HttpRequest httpRequest = prepareRequest(notification, subscriber, encoding);
+        
+        Request request = new Request.Builder()
+                .url(httpRequest.getUrl())
+                .headers(Headers.of(httpRequest.getHeaders()))
+                .post(RequestBody.create(httpRequest.getBody()))
+                .build();
+        
+        client.newCall(request).enqueue(callback);
     }
-
-    /**
-     * Generate the local (ephemeral) keys.
-     *
-     * @return
-     * @throws NoSuchAlgorithmException
-     * @throws NoSuchProviderException
-     * @throws InvalidAlgorithmParameterException
-     */
-    private static KeyPair generateLocalKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
-        ECNamedCurveParameterSpec parameterSpec = ECNamedCurveTable.getParameterSpec("prime256v1");
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("ECDH", "BC");
-        keyPairGenerator.initialize(parameterSpec);
-
-        return keyPairGenerator.generateKeyPair();
-    }
-
-    protected final HttpRequest prepareRequest(Notification notification, Subscriber subscriber, Encoding encoding) throws WebPushException {
-        if (getPrivateKey() != null && getPublicKey() != null) {
-            if (!Utils.verifyKeyPair(getPrivateKey(), getPublicKey())) {
+    
+    private HttpRequest prepareRequest(Notification notification, Subscriber subscriber, Encoding encoding) throws WebPushException {
+        var vapidPublic = Utils.loadPublicKey(publicKey);
+        var vapidPrivate = Utils.loadPrivateKey(privateKey);
+        
+        if (vapidEnabled()) {
+            if (!Utils.verifyKeyPair(vapidPrivate, vapidPublic)) {
                 throw new WebPushException("Public key and private key do not match.");
             }
         }
 
-        Encrypted encrypted = encrypt(
+        Encrypted encrypted = Utils.encrypt(
                 notification.getPayload(),
                 (ECPublicKey) Utils.loadPublicKey(subscriber.getP256dh()),
                 Base64.getUrlDecoder().decode(subscriber.getAuth()),
@@ -223,10 +185,10 @@ public class WebPush {
             jws.setHeader("typ", "JWT");
             jws.setHeader("alg", "ES256");
             jws.setPayload(claims.toJson());
-            jws.setKey(getPrivateKey());
+            jws.setKey(vapidPrivate);
             jws.setAlgorithmHeaderValue(AlgorithmIdentifiers.ECDSA_USING_P256_CURVE_AND_SHA256);
 
-            byte[] pk = Utils.encode((ECPublicKey) getPublicKey());
+            byte[] pk = Utils.encode((ECPublicKey) vapidPublic);
 
             try {
                 if (encoding == Encoding.AES128GCM) {
@@ -258,15 +220,7 @@ public class WebPush {
         return subject;
     }
 
-    public PublicKey getPublicKey() {
-        return publicKey;
-    }
-
-    public PrivateKey getPrivateKey() {
-        return privateKey;
-    }
-
     public boolean vapidEnabled() {
-        return publicKey != null && privateKey != null;
+        return StringUtils.isNotBlank(publicKey) &&  StringUtils.isNotBlank(privateKey);
     }
 }

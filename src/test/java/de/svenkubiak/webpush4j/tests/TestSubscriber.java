@@ -6,8 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
-import de.svenkubiak.webpush4j.Subscriber;
 import de.svenkubiak.webpush4j.exceptions.WebPushException;
+import de.svenkubiak.webpush4j.models.Subscriber;
 
 public class TestSubscriber {
     private String json = """

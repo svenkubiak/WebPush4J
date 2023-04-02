@@ -1,4 +1,4 @@
-package de.svenkubiak.webpush4j.http;
+package de.svenkubiak.webpush4j.models;
 
 import java.util.Map;
 

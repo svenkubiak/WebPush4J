@@ -1,4 +1,4 @@
-package de.svenkubiak.webpush4j.http;
+package de.svenkubiak.webpush4j.utils;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static javax.crypto.Cipher.DECRYPT_MODE;
@@ -31,7 +31,6 @@ import org.bouncycastle.jce.interfaces.ECPrivateKey;
 import org.bouncycastle.jce.interfaces.ECPublicKey;
 
 import de.svenkubiak.webpush4j.enums.Encoding;
-import de.svenkubiak.webpush4j.utils.Utils;
 
 /**
  * An implementation of Encrypted Content-Encoding for HTTP.
@@ -45,7 +44,7 @@ import de.svenkubiak.webpush4j.utils.Utils;
  *
  * TODO: Support multiple records (not needed for Web Push)
  */
-public class HttpEce {
+public class Ece {
     public static final int KEY_LENGTH = 16;
     public static final int SHA_256_LENGTH = 32;
     public static final int TAG_SIZE = 16;
@@ -55,11 +54,11 @@ public class HttpEce {
     private Map<String, KeyPair> keys;
     private Map<String, String> labels;
 
-    public HttpEce() {
+    public Ece() {
         this(new HashMap<String, KeyPair>(), new HashMap<String, String>());
     }
 
-    public HttpEce(Map<String, KeyPair> keys, Map<String, String> labels) {
+    public Ece(Map<String, KeyPair> keys, Map<String, String> labels) {
         this.keys = keys;
         this.labels = labels;
     }
