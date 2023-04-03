@@ -55,7 +55,7 @@ Synchronous
 ```java
 try {
     WebPush.crerate()
-  	    .withPublicKey("PUBLIC KEY") //Vapid public key
+		.withPublicKey("PUBLIC KEY") //Vapid public key
  		.withPrivateKey("PRIVATE KEY") //Vapid private key
   		.withSubject("SUBJECT");
         	.withSubscriber(subscriber)
@@ -73,7 +73,7 @@ Asynchronous
 Callback callback = ... //OkHttp callback
 try {
     WebPush.crerate()
-  	    .withPublicKey("PUBLIC KEY") //Vapid public key
+		.withPublicKey("PUBLIC KEY") //Vapid public key
  		.withPrivateKey("PRIVATE KEY") //Vapid private key
   		.withSubject("SUBJECT");
         	.withSubscriber(subscriber)
@@ -103,7 +103,7 @@ public class Main {
         
         try {
 	    WebPush.crerate()
-	  	    .withPublicKey("PUBLIC KEY") //Vapid public key
+			.withPublicKey("PUBLIC KEY") //Vapid public key
 	 		.withPrivateKey("PRIVATE KEY") //Vapid private key
 	  		.withSubject("SUBJECT");
 	        	.withSubscriber(subscriber)
