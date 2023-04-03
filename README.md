@@ -15,10 +15,10 @@ Status: Beta.
 
 Roadmap to stable
 ------------------
-[] Add JavaDoc(s)
-[] More and detailed UnitTests
-[] Sonar refactorings
-[] Improvements on Async sending
+- [ ] Add JavaDoc(s)
+- [ ] More and detailed UnitTests
+- [ ] Sonar refactorings
+- [ ] Improvements on Async sending
 
 Usage
 ------------------
