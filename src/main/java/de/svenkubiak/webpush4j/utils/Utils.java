@@ -166,13 +166,11 @@ public class Utils {
         return buffer.array();
     }
     
-    public static byte[] toJson(Object object) {
+    public static byte[] toJson(Object object) throws WebPushException {
         try {
             return objectMapper.writeValueAsBytes(object);
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            throw new WebPushException(e);
         }
-        
-        return new byte[0];
     }
 }

@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 import de.svenkubiak.webpush4j.enums.Dir;
 import de.svenkubiak.webpush4j.enums.Urgency;
+import de.svenkubiak.webpush4j.exceptions.WebPushException;
 import de.svenkubiak.webpush4j.utils.Utils;
 
 public class Notification {
@@ -89,7 +90,7 @@ public class Notification {
         return this;
     }
 
-    public byte[] getPayload() {
+    public byte[] getPayload() throws WebPushException {
         return Utils.toJson(payload);
     }
 

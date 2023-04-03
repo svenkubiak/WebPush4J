@@ -27,6 +27,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 
 public class WebPush {
+    private static final String CRYPTO_KEY = "Crypto-Key";
     private final OkHttpClient httpClient = new OkHttpClient();
     private String subject;
     private String publicKey;
@@ -34,7 +35,8 @@ public class WebPush {
     private Subscriber subscriber;
     private Notification notification;
     
-    public WebPush() {
+    private WebPush() {
+        //no-args constructor
     }
     
     public static WebPush crerate() {
@@ -130,7 +132,7 @@ public class WebPush {
             } else if (encoding == Encoding.AESGCM) {
                 headers.put("Content-Encoding", "aesgcm");
                 headers.put("Encryption", "salt=" + Base64.getUrlEncoder().withoutPadding().encodeToString(salt));
-                headers.put("Crypto-Key", "dh=" + Base64.getUrlEncoder().encodeToString(dh));
+                headers.put(CRYPTO_KEY, "dh=" + Base64.getUrlEncoder().encodeToString(dh));
             }
 
             body = encrypted.getCiphertext();
@@ -148,7 +150,7 @@ public class WebPush {
                 claims.setSubject(getSubject());
             }
 
-            JsonWebSignature jws = new JsonWebSignature();
+            var jws = new JsonWebSignature();
             jws.setHeader("typ", "JWT");
             jws.setHeader("alg", "ES256");
             jws.setPayload(claims.toJson());
@@ -167,10 +169,10 @@ public class WebPush {
                 throw new WebPushException(e);
             }
             
-            if (headers.containsKey("Crypto-Key")) {
-                headers.put("Crypto-Key", headers.get("Crypto-Key") + ";p256ecdsa=" + Base64.getUrlEncoder().encodeToString(pk));
+            if (headers.containsKey(CRYPTO_KEY)) {
+                headers.put(CRYPTO_KEY, headers.get(CRYPTO_KEY) + ";p256ecdsa=" + Base64.getUrlEncoder().encodeToString(pk));
             } else {
-                headers.put("Crypto-Key", "p256ecdsa=" + Base64.getUrlEncoder().encodeToString(pk));
+                headers.put(CRYPTO_KEY, "p256ecdsa=" + Base64.getUrlEncoder().encodeToString(pk));
             }
         } else {
             throw new WebPushException("No Vapid keys found. Please set public and private key.");
