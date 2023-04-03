@@ -24,7 +24,7 @@ public class TestHttpEce {
     }
 
     @Test
-    public void testZeroSaltAndKey() throws GeneralSecurityException {
+    void testZeroSaltAndKey() throws GeneralSecurityException {
         HttpEce httpEce = new HttpEce();
         String plaintext = "Hello";
         byte[] salt = new byte[16];
@@ -44,7 +44,7 @@ public class TestHttpEce {
      * @throws GeneralSecurityException
      */
     @Test
-    public void testSampleEncryption() throws GeneralSecurityException {
+    void testSampleEncryption() throws GeneralSecurityException {
         HttpEce httpEce = new HttpEce();
 
         byte[] plaintext = "I am the walrus".getBytes();

@@ -17,7 +17,6 @@ import org.jose4j.lang.JoseException;
 
 import de.svenkubiak.webpush4j.enums.Encoding;
 import de.svenkubiak.webpush4j.exceptions.WebPushException;
-import de.svenkubiak.webpush4j.models.Encrypted;
 import de.svenkubiak.webpush4j.models.HttpRequest;
 import de.svenkubiak.webpush4j.models.Notification;
 import de.svenkubiak.webpush4j.models.Subscriber;
@@ -26,7 +25,6 @@ import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import okhttp3.Response;
 
 public class WebPush {
     private final OkHttpClient httpClient = new OkHttpClient();
@@ -76,15 +74,14 @@ public class WebPush {
     public void send(Encoding encoding) throws WebPushException {
         Objects.requireNonNull(encoding, "encoding can not be null");
         
-        HttpRequest httpRequest = prepareRequest(notification, subscriber, encoding);
-        
-        Request request = new Request.Builder()
+        var httpRequest = prepareRequest(notification, subscriber, encoding);
+        var request = new Request.Builder()
                 .url(httpRequest.getUrl())
                 .headers(Headers.of(httpRequest.getHeaders()))
                 .post(RequestBody.create(httpRequest.getBody()))
                 .build();
 
-        try (Response response = httpClient.newCall(request).execute()) {
+        try (var response = httpClient.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 throw new WebPushException("Unexpected response: " + response);
             }
@@ -97,13 +94,11 @@ public class WebPush {
         var vapidPublic = Utils.loadPublicKey(publicKey);
         var vapidPrivate = Utils.loadPrivateKey(privateKey);
         
-        if (vapidEnabled()) {
-            if (!Utils.verifyKeyPair(vapidPrivate, vapidPublic)) {
-                throw new WebPushException("Public key and private key do not match.");
-            }
+        if (vapidEnabled() && !Utils.verifyKeyPair(vapidPrivate, vapidPublic)) {
+            throw new WebPushException("Public key and private key do not match.");
         }
 
-        Encrypted encrypted = Utils.encrypt(
+        var encrypted = Utils.encrypt(
                 notification.getPayload(),
                 (ECPublicKey) Utils.loadPublicKey(subscriber.getP256dh()),
                 Base64.getUrlDecoder().decode(subscriber.getAuth()),
@@ -141,14 +136,12 @@ public class WebPush {
             body = encrypted.getCiphertext();
         }
 
-        if (vapidEnabled()) {
-            if (encoding == Encoding.AES128GCM) {
-                if (subscriber.getEndpoint().startsWith("https://fcm.googleapis.com")) {
-                    url = subscriber.getEndpoint().replace("fcm/send", "wp");
-                }
+        if (vapidEnabled() && encoding == Encoding.AES128GCM) {
+            if (subscriber.getEndpoint().startsWith("https://fcm.googleapis.com")) {
+                url = subscriber.getEndpoint().replace("fcm/send", "wp");
             }
 
-            JwtClaims claims = new JwtClaims();
+            var claims = new JwtClaims();
             claims.setAudience(subscriber.getOrigin());
             claims.setExpirationTimeMinutesInTheFuture(12 * 60);
             if (getSubject() != null) {

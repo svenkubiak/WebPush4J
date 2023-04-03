@@ -2,7 +2,6 @@ package de.svenkubiak.webpush4j.utils;
 
 import static org.bouncycastle.jce.provider.BouncyCastleProvider.PROVIDER_NAME;
 
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.InvalidAlgorithmParameterException;
@@ -58,11 +57,11 @@ public class Utils {
     }
 
     public static PublicKey loadPublicKey(byte[] decodedPublicKey) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeySpecException {
-        KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM, PROVIDER_NAME);
+        var keyFactory = KeyFactory.getInstance(ALGORITHM, PROVIDER_NAME);
         ECParameterSpec parameterSpec = ECNamedCurveTable.getParameterSpec(CURVE);
         ECCurve curve = parameterSpec.getCurve();
         ECPoint point = curve.decodePoint(decodedPublicKey);
-        ECPublicKeySpec pubSpec = new ECPublicKeySpec(point, parameterSpec);
+        var pubSpec = new ECPublicKeySpec(point, parameterSpec);
 
         return keyFactory.generatePublic(pubSpec);
     }
@@ -81,10 +80,10 @@ public class Utils {
         Map<String, String> labels = new HashMap<>();
         labels.put(SERVER_KEY_ID, SERVER_KEY_CURVE);
 
-        byte[] salt = new byte[16];
+        var salt = new byte[16];
         SECURE_RANDOM.nextBytes(salt);
 
-        HttpEce httpEce = new HttpEce(keys, labels);
+        var httpEce = new HttpEce(keys, labels);
         byte[] ciphertext;
         try {
             ciphertext = httpEce.encrypt(payload, salt, null, SERVER_KEY_ID, userPublicKey, userAuth, encoding);
@@ -105,10 +104,10 @@ public class Utils {
     }
 
     public static PrivateKey loadPrivateKey(byte[] decodedPrivateKey) throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeySpecException {
-        BigInteger s = BigIntegers.fromUnsignedByteArray(decodedPrivateKey);
+        var bigInt = BigIntegers.fromUnsignedByteArray(decodedPrivateKey);
         ECParameterSpec parameterSpec = ECNamedCurveTable.getParameterSpec(CURVE);
-        ECPrivateKeySpec privateKeySpec = new ECPrivateKeySpec(s, parameterSpec);
-        KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM, PROVIDER_NAME);
+        var privateKeySpec = new ECPrivateKeySpec(bigInt, parameterSpec);
+        var keyFactory = KeyFactory.getInstance(ALGORITHM, PROVIDER_NAME);
 
         return keyFactory.generatePrivate(privateKeySpec);
     }
@@ -122,17 +121,16 @@ public class Utils {
     }
 
     public static KeyPair generateLocalKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
-        ECNamedCurveParameterSpec parameterSpec = ECNamedCurveTable.getParameterSpec("prime256v1");
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("ECDH", "BC");
+        ECNamedCurveParameterSpec parameterSpec = ECNamedCurveTable.getParameterSpec(CURVE);
+        var keyPairGenerator = KeyPairGenerator.getInstance("ECDH", "BC");
         keyPairGenerator.initialize(parameterSpec);
 
         return keyPairGenerator.generateKeyPair();
     }
 
     public static byte[] concat(byte[]... arrays) {
-        int lastPos = 0;
-
-        byte[] combined = new byte[combinedLength(arrays)];
+        var lastPos = 0;
+        var combined = new byte[combinedLength(arrays)];
 
         for (byte[] array : arrays) {
             if (array == null) {
@@ -148,7 +146,7 @@ public class Utils {
     }
 
     public static int combinedLength(byte[]... arrays) {
-        int combinedLength = 0;
+        var combinedLength = 0;
 
         for (byte[] array : arrays) {
             if (array == null) {
@@ -162,7 +160,7 @@ public class Utils {
     }
 
     public static byte[] toByteArray(int integer, int size) {
-        ByteBuffer buffer = ByteBuffer.allocate(size);
+        var buffer = ByteBuffer.allocate(size);
         buffer.putInt(integer);
 
         return buffer.array();

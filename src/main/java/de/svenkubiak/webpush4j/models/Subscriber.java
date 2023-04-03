@@ -4,7 +4,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Objects;
 
-import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 
 import de.svenkubiak.webpush4j.exceptions.WebPushException;
@@ -23,7 +22,7 @@ public class Subscriber {
     public static Subscriber from(String json) {
         Objects.requireNonNull(json, "json can not be null");
         
-        DocumentContext documentContext = JsonPath.parse(json);
+        var documentContext = JsonPath.parse(json);
         String endpoint = documentContext.read("$.endpoint");
         String p256dh = documentContext.read("$.keys.p256dh");
         String auth = documentContext.read("$.keys.auth");
