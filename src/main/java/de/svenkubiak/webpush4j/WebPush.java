@@ -31,7 +31,6 @@ import okhttp3.Response;
 
 public class WebPush {
     private final OkHttpClient client = new OkHttpClient();
-    private String gcmApiKey;
     private String subject;
     private String publicKey;
     private String privateKey;
@@ -161,13 +160,7 @@ public class WebPush {
             body = encrypted.getCiphertext();
         }
 
-        if (subscriber.isGcm()) {
-            if (getGcmApiKey() == null) {
-                throw new IllegalStateException("An GCM API key is needed to send a push notification to a GCM endpoint.");
-            }
-
-            headers.put("Authorization", "key=" + getGcmApiKey());
-        } else if (vapidEnabled()) {
+        if (vapidEnabled()) {
             if (encoding == Encoding.AES128GCM) {
                 if (subscriber.getEndpoint().startsWith("https://fcm.googleapis.com")) {
                     url = subscriber.getEndpoint().replace("fcm/send", "wp");
@@ -205,15 +198,11 @@ public class WebPush {
             } else {
                 headers.put("Crypto-Key", "p256ecdsa=" + Base64.getUrlEncoder().encodeToString(pk));
             }
-        } else if (subscriber.isFcm() && getGcmApiKey() != null) {
-            headers.put("Authorization", "key=" + getGcmApiKey());
+        } else {
+            throw new WebPushException("No Vapid keys found. Please set public and private key.");
         }
 
         return new HttpRequest(url, headers, body);
-    }
-
-    public String getGcmApiKey() {
-        return gcmApiKey;
     }
 
     public String getSubject() {

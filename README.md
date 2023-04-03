@@ -16,9 +16,10 @@ Status: Beta.
 Roadmap to stable
 ------------------
 - [ ] Add JavaDoc(s)
-- [ ] More and detailed UnitTests
+- [x] More and detailed UnitTests
 - [ ] Sonar refactorings
 - [ ] Improvements on Async sending
+- [ ] Add more notification parameters
 
 Usage
 ------------------

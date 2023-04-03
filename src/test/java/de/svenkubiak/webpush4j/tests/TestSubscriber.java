@@ -49,7 +49,6 @@ public class TestSubscriber {
         
         //Then
         assertFalse(subscriber.isFcm());
-        assertTrue(subscriber.isGcm());
     }
     
     @Test
@@ -59,7 +58,6 @@ public class TestSubscriber {
         
         //Then
         assertTrue(subscriber.isFcm());
-        assertFalse(subscriber.isGcm());
     }
     
     @Test

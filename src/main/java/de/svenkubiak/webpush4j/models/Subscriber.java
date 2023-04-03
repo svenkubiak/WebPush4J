@@ -42,10 +42,6 @@ public class Subscriber {
     public String getAuth() {
         return auth;
     }
-    
-    public boolean isGcm() {
-        return endpoint.indexOf("https://android.googleapis.com/gcm/send") == 0;
-    }
 
     public boolean isFcm() {
         return endpoint.indexOf("https://fcm.googleapis.com/fcm/send") == 0;

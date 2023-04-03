@@ -84,7 +84,7 @@ public class Utils {
         byte[] salt = new byte[16];
         SECURE_RANDOM.nextBytes(salt);
 
-        Ece httpEce = new Ece(keys, labels);
+        HttpEce httpEce = new HttpEce(keys, labels);
         byte[] ciphertext;
         try {
             ciphertext = httpEce.encrypt(payload, salt, null, SERVER_KEY_ID, userPublicKey, userAuth, encoding);

@@ -44,7 +44,7 @@ import de.svenkubiak.webpush4j.enums.Encoding;
  *
  * TODO: Support multiple records (not needed for Web Push)
  */
-public class Ece {
+public class HttpEce {
     public static final int KEY_LENGTH = 16;
     public static final int SHA_256_LENGTH = 32;
     public static final int TAG_SIZE = 16;
@@ -54,11 +54,11 @@ public class Ece {
     private Map<String, KeyPair> keys;
     private Map<String, String> labels;
 
-    public Ece() {
+    public HttpEce() {
         this(new HashMap<String, KeyPair>(), new HashMap<String, String>());
     }
 
-    public Ece(Map<String, KeyPair> keys, Map<String, String> labels) {
+    public HttpEce(Map<String, KeyPair> keys, Map<String, String> labels) {
         this.keys = keys;
         this.labels = labels;
     }
