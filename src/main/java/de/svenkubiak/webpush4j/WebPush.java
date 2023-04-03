@@ -22,7 +22,6 @@ import de.svenkubiak.webpush4j.models.HttpRequest;
 import de.svenkubiak.webpush4j.models.Notification;
 import de.svenkubiak.webpush4j.models.Subscriber;
 import de.svenkubiak.webpush4j.utils.Utils;
-import okhttp3.Callback;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -30,7 +29,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class WebPush {
-    private final OkHttpClient client = new OkHttpClient();
+    private final OkHttpClient httpClient = new OkHttpClient();
     private String subject;
     private String publicKey;
     private String privateKey;
@@ -56,7 +55,7 @@ public class WebPush {
     }
 
     public WebPush withSubject(String subject) {
-        this.subject = subject;
+        this.subject = Objects.requireNonNull(subject, "subject can not be null");
         return this;
     }
 
@@ -85,31 +84,13 @@ public class WebPush {
                 .post(RequestBody.create(httpRequest.getBody()))
                 .build();
 
-        try (Response response = client.newCall(request).execute()) {
+        try (Response response = httpClient.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 throw new WebPushException("Unexpected response: " + response);
             }
         } catch (IOException e) {
             throw new WebPushException(e);
         }
-    }
-    
-    public void sendAsync(Callback callback) throws WebPushException {
-        sendAsync(Encoding.AES128GCM, callback);
-    }
-    
-    public void sendAsync(Encoding encoding, Callback callback) throws WebPushException {
-        Objects.requireNonNull(encoding, "encoding can not be null");
-        
-        HttpRequest httpRequest = prepareRequest(notification, subscriber, encoding);
-        
-        Request request = new Request.Builder()
-                .url(httpRequest.getUrl())
-                .headers(Headers.of(httpRequest.getHeaders()))
-                .post(RequestBody.create(httpRequest.getBody()))
-                .build();
-        
-        client.newCall(request).enqueue(callback);
     }
     
     private HttpRequest prepareRequest(Notification notification, Subscriber subscriber, Encoding encoding) throws WebPushException {
@@ -139,7 +120,7 @@ public class WebPush {
         headers.put("TTL", String.valueOf(notification.getTtl()));
 
         if (notification.hasUrgency()) {
-            headers.put("Urgency", notification.getUrgency().getHeaderValue());
+            headers.put("Urgency", notification.getUrgency().getValue());
         }
 
         if (notification.hasTopic()) {

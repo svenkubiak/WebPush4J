@@ -5,6 +5,7 @@ WebPush4J
 
 Refactored and improved version of [WebPush](https://github.com/web-push-libs/webpush-java)
 
+- Switch from Gradle to Maven
 - Updated dependencies
 - OkHttp instead of httpcomponents
 - Reduced code, cleanups and refactorings
@@ -18,8 +19,8 @@ Roadmap to stable
 - [ ] Add JavaDoc(s)
 - [x] More and detailed UnitTests
 - [ ] Sonar refactorings
-- [ ] Improvements on Async sending
-- [ ] Add more notification parameters
+- [ ] Add Async sending
+- [x] Add more notification parameters
 
 Usage
 ------------------

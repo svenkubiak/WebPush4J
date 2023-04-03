@@ -5,9 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 
+import de.svenkubiak.webpush4j.enums.Dir;
 import de.svenkubiak.webpush4j.enums.Urgency;
 import de.svenkubiak.webpush4j.models.Notification;
 
@@ -16,20 +18,38 @@ public class TestNotification {
     @Test
     void testConstruct() {
         //Given
+        Dir dir = Dir.LTR;
+        String lang = UUID.randomUUID().toString();
+        String icon = UUID.randomUUID().toString();
+        String data = UUID.randomUUID().toString();
         String topic = UUID.randomUUID().toString();
+        String body = UUID.randomUUID().toString();
+        String title = UUID.randomUUID().toString();
         Urgency urgency = Urgency.HIGH;
-        int ttl = 23;
+        long ttl = 23;
         
         //When
         Notification notification = Notification.create()
+                .withTitle(title)
                 .withTopic(topic)
+                .withData(data)
+                .withLang(lang)
+                .withDir(dir)
+                .withIcon(icon)
                 .withUrgency(urgency)
-                .withTtl(ttl);
+                .withBody(body)
+                .withTtl(ttl, TimeUnit.DAYS);
         
         //Then
         assertEquals(notification.getTopic(), topic);
         assertEquals(notification.getUrgency(), urgency);
-        assertEquals(notification.getTtl(), ttl);
+        assertEquals(notification.getTtl(), 1987200);
+        assertEquals(notification.getPayload("body"), body);
+        assertEquals(notification.getPayload("title"), title);
+        assertEquals(notification.getPayload("data"), data);
+        assertEquals(notification.getPayload("icon"), icon);
+        assertEquals(notification.getPayload("lang"), lang);
+        assertEquals(notification.getPayload("dir"), dir.getValue());
     }
     
     @Test

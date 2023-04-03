@@ -1,8 +1,6 @@
 package de.svenkubiak.webpush4j.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -40,24 +38,6 @@ public class TestSubscriber {
         assertEquals(subscriber.getEndpoint(), "https://web.push.apple.com/loreipsum");
         assertEquals(subscriber.getP256dh(), "loreipsump256dh");
         assertEquals(subscriber.getAuth(), "loreipsumgauth");
-    }
-    
-    @Test
-    void testIsFcm() {
-        //When
-        Subscriber subscriber = new Subscriber("https://android.googleapis.com/gcm/send/loreipsum", "loreipsump256dh", "loreipsumgauth");
-        
-        //Then
-        assertFalse(subscriber.isFcm());
-    }
-    
-    @Test
-    void testIsGcm() {
-        //When
-        Subscriber subscriber = new Subscriber("https://fcm.googleapis.com/fcm/send/loreipsum", "loreipsump256dh", "loreipsumgauth");
-        
-        //Then
-        assertTrue(subscriber.isFcm());
     }
     
     @Test

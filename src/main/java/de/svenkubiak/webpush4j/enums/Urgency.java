@@ -1,23 +1,18 @@
 package de.svenkubiak.webpush4j.enums;
 
-/**
- * Web Push Message Urgency header field values
- *
- *  @see <a href="https://tools.ietf.org/html/rfc8030#section-5.3">Push Message Urgency</a>
- */
 public enum Urgency {
-	VERY_LOW("very-low"),
+	HIGH("high"),
 	LOW("low"),
 	NORMAL("normal"),
-	HIGH("high");
+	VERY_LOW("very-low");
 
-	private final String headerValue;
+	private final String value;
 
-	Urgency(String urgency) {
-		this.headerValue = urgency;
+	Urgency(String value) {
+		this.value = value;
 	}
 
-	public String getHeaderValue() {
-		return headerValue;
+	public String getValue() {
+		return value;
 	}
 }

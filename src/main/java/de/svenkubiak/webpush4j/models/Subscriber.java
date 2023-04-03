@@ -43,10 +43,6 @@ public class Subscriber {
         return auth;
     }
 
-    public boolean isFcm() {
-        return endpoint.indexOf("https://fcm.googleapis.com/fcm/send") == 0;
-    }
-
     public String getOrigin() throws WebPushException {
         URL url;
         try {
