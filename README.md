@@ -68,23 +68,6 @@ try {
 }
 ```	
 
-Asynchronous
-
-```java
-
-Callback callback = ... //OkHttp callback
-try {
-    WebPush.crerate()
-		.withPublicKey("PUBLIC KEY") //Vapid public key
- 		.withPrivateKey("PRIVATE KEY") //Vapid private key
-  		.withSubject("SUBJECT");
-        	.withSubscriber(subscriber)
-        	.withNotification(notification)
-        	.sendAsync(callback);
-} catch (WebPushException e) {
-    e.printStackTrace();
-}
-```	
 
 Full example
 ------------------
