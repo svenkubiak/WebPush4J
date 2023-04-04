@@ -1,5 +1,6 @@
 package de.svenkubiak.webpush4j.tests;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 import java.security.GeneralSecurityException;
@@ -29,7 +30,7 @@ class TestHttpEce {
         String plaintext = "Hello";
         byte[] salt = new byte[16];
         byte[] key = new byte[16];
-        byte[] actual = httpEce.encrypt(plaintext.getBytes(), salt, key, null, null, null, Encoding.AES128GCM);
+        byte[] actual = httpEce.encrypt(plaintext.getBytes(UTF_8), salt, key, null, null, null, Encoding.AES128GCM);
         byte[] expected = decode("AAAAAAAAAAAAAAAAAAAAAAAAEAAAMpsi6NfZUkOdJI96XyX0tavLqyIdiw");
 
         assertArrayEquals(expected, actual);
@@ -47,7 +48,7 @@ class TestHttpEce {
     void testSampleEncryption() throws GeneralSecurityException {
         HttpEce httpEce = new HttpEce();
 
-        byte[] plaintext = "I am the walrus".getBytes();
+        byte[] plaintext = "I am the walrus".getBytes(UTF_8);
         byte[] salt = decode("I1BsxtFttlv3u_Oo94xnmw");
         byte[] key = decode("yqdlZ-tYemfogSmv7Ws5PQ");
         byte[] actual = httpEce.encrypt(plaintext, salt, key, null, null, null, Encoding.AES128GCM);

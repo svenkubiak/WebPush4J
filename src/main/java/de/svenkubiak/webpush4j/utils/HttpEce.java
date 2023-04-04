@@ -179,7 +179,7 @@ public class HttpEce {
         }
 
         byte[] rs = Utils.toByteArray(4096, 4);
-        byte[] idlen = new byte[] { (byte) keyIdBytes.length };
+        var idlen = new byte[] { (byte) keyIdBytes.length };
 
         return Utils.concat(salt, rs, idlen, keyIdBytes);
     }
@@ -283,8 +283,7 @@ public class HttpEce {
         }
 
         if (dh == null) {
-            KeyPair keyPair = keys.get(keyId);
-
+            var keyPair = keys.get(keyId);
             if (keyPair == null) {
                 throw new IllegalArgumentException("No saved key for keyid '" + keyId + "'.");
             }
@@ -325,7 +324,7 @@ public class HttpEce {
             throw new IllegalArgumentException("Unsupported mode: " + mode);
         }
 
-        KeyAgreement keyAgreement = KeyAgreement.getInstance("ECDH");
+        var keyAgreement = KeyAgreement.getInstance("ECDH");
         keyAgreement.init(getPrivateKey(keyId));
         keyAgreement.doPhase(remotePubKey, true);
         byte[] secret = keyAgreement.generateSecret();
@@ -347,7 +346,7 @@ public class HttpEce {
     private  byte[][] extractDH(String keyid, ECPublicKey publicKey) throws NoSuchAlgorithmException, InvalidKeyException {
         ECPublicKey senderPubKey = getPublicKey(keyid);
 
-        KeyAgreement keyAgreement = KeyAgreement.getInstance("ECDH");
+        var keyAgreement = KeyAgreement.getInstance("ECDH");
         keyAgreement.init(getPrivateKey(keyid));
         keyAgreement.doPhase(publicKey, true);
 
@@ -412,7 +411,7 @@ public class HttpEce {
             throw new IllegalArgumentException("Cannot convert an integer larger than " + (TWO_BYTE_MAX - 1) + " to two bytes.");
         }
 
-        byte[] bytes = new byte[2];
+        var bytes = new byte[2];
         bytes[1] = (byte) (number & 0xff);
         bytes[0] = (byte) (number >> 8);
 
