@@ -28,6 +28,7 @@ import okhttp3.RequestBody;
 
 public class WebPush {
     private static final String CRYPTO_KEY = "Crypto-Key";
+    private static final float EXPIRES = 720f;
     private final OkHttpClient httpClient = new OkHttpClient();
     private String subject;
     private String publicKey;
@@ -145,7 +146,7 @@ public class WebPush {
 
             var claims = new JwtClaims();
             claims.setAudience(subscriber.getOrigin());
-            claims.setExpirationTimeMinutesInTheFuture(12 * 60);
+            claims.setExpirationTimeMinutesInTheFuture(EXPIRES);
             if (getSubject() != null) {
                 claims.setSubject(getSubject());
             }
