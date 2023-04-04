@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import de.svenkubiak.webpush4j.exceptions.WebPushException;
 import de.svenkubiak.webpush4j.models.Subscriber;
 
-public class TestSubscriber {
+class TestSubscriber {
     private String json = """
                         {
               "endpoint": "https://web.push.apple.com/loreipsum",

@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import de.svenkubiak.webpush4j.enums.Encoding;
 import de.svenkubiak.webpush4j.utils.HttpEce;
 
-public class TestHttpEce {
+class TestHttpEce {
     @BeforeAll
     public static void addSecurityProvider() {
         Security.addProvider(new BouncyCastleProvider());

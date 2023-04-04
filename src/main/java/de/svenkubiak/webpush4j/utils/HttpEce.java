@@ -12,7 +12,6 @@ import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,8 +40,6 @@ import de.svenkubiak.webpush4j.enums.Encoding;
  *
  * [1] https://tools.ietf.org/html/draft-ietf-httpbis-encryption-encoding-01
  * [2] https://tools.ietf.org/html/draft-ietf-httpbis-encryption-encoding-09
- *
- * TODO: Support multiple records (not needed for Web Push)
  */
 public class HttpEce {
     public static final int KEY_LENGTH = 16;
@@ -55,7 +52,7 @@ public class HttpEce {
     private Map<String, String> labels;
 
     public HttpEce() {
-        this(new HashMap<String, KeyPair>(), new HashMap<String, String>());
+        this(new HashMap<>(), new HashMap<>());
     }
 
     public HttpEce(Map<String, KeyPair> keys, Map<String, String> labels) {
@@ -77,29 +74,24 @@ public class HttpEce {
      * @throws GeneralSecurityException
      */
     public byte[] encrypt(byte[] plaintext, byte[] salt, byte[] privateKey, String keyid, ECPublicKey dh, byte[] authSecret, Encoding version) throws GeneralSecurityException {
-        log("encrypt", plaintext);
-
         byte[][] keyAndNonce = deriveKeyAndNonce(salt, privateKey, keyid, dh, authSecret, version, ENCRYPT_MODE);
         byte[] key = keyAndNonce[0];
         byte[] nonce = keyAndNonce[1];
 
         // Note: Cipher adds the tag to the end of the ciphertext
-        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
-        GCMParameterSpec params = new GCMParameterSpec(TAG_SIZE * 8, nonce);
+        var cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
+        var params = new GCMParameterSpec(TAG_SIZE * 8, nonce);
         cipher.init(ENCRYPT_MODE, new SecretKeySpec(key, "AES"), params);
 
         // For AES128GCM suffix {0x02}, for AESGCM prefix {0x00, 0x00}.
         if (version == Encoding.AES128GCM) {
             byte[] header = buildHeader(salt, keyid);
-            log("header", header);
 
-            byte[] padding = new byte[] { 2 };
-            log("padding", padding);
+            var padding = new byte[] { 2 };
 
             byte[][] encrypted = {cipher.update(plaintext), cipher.update(padding), cipher.doFinal()};
-            log("encrypted", Utils.concat(encrypted));
 
-            return log("ciphertext", Utils.concat(header, Utils.concat(encrypted)));
+            return Utils.concat(header, Utils.concat(encrypted));
         } else {
             return Utils.concat(cipher.update(new byte[2]), cipher.doFinal(plaintext));
         }
@@ -121,7 +113,7 @@ public class HttpEce {
             byte[][] header = parseHeader(payload);
 
             salt = header[0];
-            keyid = new String(header[2]);
+            keyid = new String(header[2], UTF_8);
             body = header[3];
         } else {
             body = payload;
@@ -149,8 +141,8 @@ public class HttpEce {
     }
 
     public byte[] decryptRecord(byte[] ciphertext, byte[] key, byte[] nonce, Encoding version) throws NoSuchPaddingException, NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
-        GCMParameterSpec params = new GCMParameterSpec(TAG_SIZE * 8, nonce);
+        var cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
+        var params = new GCMParameterSpec(TAG_SIZE * 8, nonce);
         cipher.init(DECRYPT_MODE, new SecretKeySpec(key, "AES"), params);
 
         byte[] plaintext = cipher.doFinal(ciphertext);
@@ -199,7 +191,7 @@ public class HttpEce {
      * @return
      */
     protected static byte[] buildInfo(String type, byte[] context) {
-        ByteBuffer buffer = ByteBuffer.allocate(19 + type.length() + context.length);
+        var buffer = ByteBuffer.allocate(19 + type.length() + context.length);
 
         buffer.put("Content-Encoding: ".getBytes(UTF_8), 0, 18);
         buffer.put(type.getBytes(UTF_8), 0, type.length());
@@ -213,17 +205,11 @@ public class HttpEce {
      * Convenience method for computing the HMAC Key Derivation Function. The real work is offloaded to BouncyCastle.
      */
     protected static byte[] hkdfExpand(byte[] ikm, byte[] salt, byte[] info, int length) {
-        log("salt", salt);
-        log("ikm", ikm);
-        log("info", info);
-
-        HKDFBytesGenerator hkdf = new HKDFBytesGenerator(new SHA256Digest());
+        var hkdf = new HKDFBytesGenerator(new SHA256Digest());
         hkdf.init(new HKDFParameters(ikm, salt, info));
 
-        byte[] okm = new byte[length];
+        var okm = new byte[length];
         hkdf.generateBytes(okm, 0, length);
-
-        log("expand", okm);
 
         return okm;
     }
@@ -271,23 +257,20 @@ public class HttpEce {
             keyInfo = buildInfo("aesgcm", secretAndContext[1]);
             nonceInfo = buildInfo("nonce", secretAndContext[1]);
         } else if (version == Encoding.AES128GCM) {
-            keyInfo = "Content-Encoding: aes128gcm\0".getBytes();
-            nonceInfo = "Content-Encoding: nonce\0".getBytes();
+            keyInfo = "Content-Encoding: aes128gcm\0".getBytes(UTF_8);
+            nonceInfo = "Content-Encoding: nonce\0".getBytes(UTF_8);
 
             secret = extractSecret(key, keyId, dh, authSecret, mode);
         } else {
             throw new IllegalStateException("Unknown version: " + version);
         }
 
-        byte[] hkdf_key = hkdfExpand(secret, salt, keyInfo, 16);
-        byte[] hkdf_nonce = hkdfExpand(secret, salt, nonceInfo, 12);
-
-        log("key", hkdf_key);
-        log("nonce", hkdf_nonce);
+        byte[] hkdfKey = hkdfExpand(secret, salt, keyInfo, 16);
+        byte[] hkdfNonce = hkdfExpand(secret, salt, nonceInfo, 12);
 
         return new byte[][]{
-                hkdf_key,
-                hkdf_nonce
+            hkdfKey,
+            hkdfNonce
         };
     }
 
@@ -342,10 +325,6 @@ public class HttpEce {
             throw new IllegalArgumentException("Unsupported mode: " + mode);
         }
 
-        log("remote pubkey", Utils.encode(remotePubKey));
-        log("sender pubkey", Utils.encode(senderPubKey));
-        log("receiver pubkey", Utils.encode(receiverPubKey));
-
         KeyAgreement keyAgreement = KeyAgreement.getInstance("ECDH");
         keyAgreement.init(getPrivateKey(keyId));
         keyAgreement.doPhase(remotePubKey, true);
@@ -353,7 +332,7 @@ public class HttpEce {
 
         byte[] ikm = secret;
         byte[] salt = authSecret;
-        byte[] info = Utils.concat(WEB_PUSH_INFO.getBytes(), Utils.encode(receiverPubKey), Utils.encode(senderPubKey));
+        byte[] info = Utils.concat(WEB_PUSH_INFO.getBytes(UTF_8), Utils.encode(receiverPubKey), Utils.encode(senderPubKey));
 
         return hkdfExpand(ikm, salt, info, SHA_256_LENGTH);
     }
@@ -438,20 +417,5 @@ public class HttpEce {
         bytes[0] = (byte) (number >> 8);
 
         return bytes;
-    }
-
-    /**
-     * Print the length and unpadded url-safe base64 encoding of the byte array.
-     *
-     * @param info
-     * @param array
-     * @return
-     */
-    private static byte[] log(String info, byte[] array) {
-        if ("1".equals(System.getenv("ECE_KEYLOG"))) {
-            System.out.println(info + " [" + array.length + "]: " + Base64.getUrlEncoder().withoutPadding().encodeToString(array));
-        }
-
-        return array;
     }
 }

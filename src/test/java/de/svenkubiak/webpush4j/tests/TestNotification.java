@@ -13,7 +13,7 @@ import de.svenkubiak.webpush4j.enums.Dir;
 import de.svenkubiak.webpush4j.enums.Urgency;
 import de.svenkubiak.webpush4j.models.Notification;
 
-public class TestNotification {
+class TestNotification {
 
     @Test
     void testConstruct() {
