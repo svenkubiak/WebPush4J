@@ -138,7 +138,7 @@ public class WebPush {
             body = encrypted.getCiphertext();
         }
 
-        if (vapidEnabled() && encoding == Encoding.AES128GCM) {
+        if (vapidEnabled()) {
             if (subscriber.getEndpoint().startsWith("https://fcm.googleapis.com")) {
                 url = subscriber.getEndpoint().replace("fcm/send", "wp");
             }
@@ -169,8 +169,9 @@ public class WebPush {
                 throw new WebPushException(e);
             }
             
-            if (headers.containsKey(CRYPTO_KEY)) {
-                headers.put(CRYPTO_KEY, headers.get(CRYPTO_KEY) + ";p256ecdsa=" + Base64.getUrlEncoder().encodeToString(pk));
+            var cryptoKey = headers.get(CRYPTO_KEY);
+            if (cryptoKey != null) {
+                headers.put(CRYPTO_KEY, cryptoKey + ";p256ecdsa=" + Base64.getUrlEncoder().encodeToString(pk));
             } else {
                 headers.put(CRYPTO_KEY, "p256ecdsa=" + Base64.getUrlEncoder().encodeToString(pk));
             }
