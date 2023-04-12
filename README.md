@@ -19,7 +19,6 @@ Roadmap to stable
 - [ ] Add JavaDoc(s)
 - [x] More and detailed UnitTests
 - [x] Sonar refactorings
-- [ ] Add Async sending
 - [x] Add more notification parameters
 
 Usage
