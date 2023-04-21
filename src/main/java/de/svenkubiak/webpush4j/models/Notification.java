@@ -17,7 +17,7 @@ public class Notification {
     private long ttl;
     
     private Notification() {
-        this.ttl = TimeUnit.DAYS.toSeconds(30);
+        this.ttl = TimeUnit.DAYS.toSeconds(1);
     }
 
     public static Notification create() {
