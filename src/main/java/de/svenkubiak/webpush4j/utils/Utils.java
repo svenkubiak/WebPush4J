@@ -28,8 +28,11 @@ import org.bouncycastle.math.ec.ECCurve;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.util.BigIntegers;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 
 import de.svenkubiak.webpush4j.enums.Encoding;
 import de.svenkubiak.webpush4j.exceptions.WebPushException;
@@ -39,10 +42,16 @@ public class Utils {
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final String SERVER_KEY_ID = "server-key-id";
     private static final String SERVER_KEY_CURVE = "P-256";
-    private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final String CURVE = "prime256v1";
     private static final String ALGORITHM = "ECDH";
-
+    private static ObjectMapper MAPPER = JsonMapper.builder()
+            .addModule(new AfterburnerModule())
+            .build();
+    
+    static {
+        MAPPER.setSerializationInclusion(Include.NON_NULL);
+    }
+    
     public static byte[] encode(ECPublicKey publicKey) {
         return publicKey.getQ().getEncoded(false);
     }
@@ -168,7 +177,7 @@ public class Utils {
     
     public static byte[] toJson(Object object) throws WebPushException {
         try {
-            return objectMapper.writeValueAsBytes(object);
+            return MAPPER.writeValueAsBytes(object);
         } catch (JsonProcessingException e) {
             throw new WebPushException(e);
         }
