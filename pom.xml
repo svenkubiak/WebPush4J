@@ -22,7 +22,7 @@
 		<java.version>17</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<kotlin.version>1.8.21</kotlin.version>
-		<jackson.version>2.15.0</jackson.version>
+		<jackson.version>2.15.1</jackson.version>
 		<maven.compiler.optimze>true</maven.compiler.optimze>
 	</properties>
 	<scm>
