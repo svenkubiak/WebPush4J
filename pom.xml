@@ -21,7 +21,7 @@
 	<properties>
 		<java.version>17</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<kotlin.version>1.9.0-Beta</kotlin.version>
+		<kotlin.version>1.9.0-RC</kotlin.version>
 		<jackson.version>2.15.2</jackson.version>
 		<maven.compiler.optimze>true</maven.compiler.optimze>
 	</properties>
