@@ -1,4 +1,4 @@
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/de.svenkubiak/webpush4j/badge.svg)](https://maven-badges.herokuapp.com/maven-central/de.svenkubiak/webpish4j)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/de.svenkubiak/webpush4j/badge.svg)](https://mvnrepository.com/artifact/de.svenkubiak/webpush4j)
 
 WebPush4J
 ================
