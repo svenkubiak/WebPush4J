@@ -47,7 +47,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-enforcer-plugin</artifactId>
-				<version>3.3.0</version>
+				<version>3.4.1</version>
 				<configuration>
 					<rules>
 						<DependencyConvergence>
@@ -100,7 +100,7 @@
 			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
-				<version>8.3.1</version>
+				<version>8.4.0</version>
 				<configuration>
 					<cveValidForHours>12</cveValidForHours>
 					<failBuildOnCVSS>1</failBuildOnCVSS>
@@ -120,7 +120,7 @@
 			<plugin>
 				<groupId>org.sonarsource.scanner.maven</groupId>
 				<artifactId>sonar-maven-plugin</artifactId>
-				<version>3.9.1.2184</version>
+				<version>3.10.0.2594</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -305,7 +305,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-javadoc-plugin</artifactId>
-						<version>3.5.0</version>
+						<version>3.6.0</version>
 						<executions>
 							<execution>
 								<id>attach-javadocs</id>
