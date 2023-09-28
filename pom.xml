@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.svenkubiak</groupId>
 	<artifactId>webpush4j</artifactId>
-	<version>1.0.0-RC2-SNAPSHOT</version>
+	<version>1.0.1-SNAPSHOT</version>
 	<licenses>
 		<license>
 			<name>The Apache Software License, Version 2.0</name>
