@@ -19,7 +19,7 @@
 	<properties>
 		<java.version>17</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<kotlin.version>1.9.10</kotlin.version>
+		<kotlin.version>1.9.20-Beta2</kotlin.version>
 		<jackson.version>2.15.2</jackson.version>
 		<maven.compiler.optimze>true</maven.compiler.optimze>
 	</properties>
@@ -184,7 +184,7 @@
 		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>okhttp</artifactId>
-			<version>4.10.0</version>
+			<version>4.11.0</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.jetbrains.kotlin</groupId>
