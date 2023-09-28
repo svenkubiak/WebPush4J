@@ -12,15 +12,6 @@ Refactored and improved version of [WebPush](https://github.com/web-push-libs/we
 - Fluent API
 - Requires Java 17
 
-Status: Beta.
-
-Roadmap to stable
-------------------
-- [ ] Add JavaDoc(s)
-- [x] More and detailed UnitTests
-- [x] Sonar refactorings
-- [x] Add more notification parameters
-
 Usage
 ------------------
 
