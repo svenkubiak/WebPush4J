@@ -1,6 +1,7 @@
 package de.svenkubiak.webpush4j.models;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.Objects;
 
@@ -45,7 +46,7 @@ public class Subscriber {
     public String getOrigin() throws WebPushException {
         URL url;
         try {
-            url = new URL(endpoint);
+            url = URI.create(endpoint).toURL();
             return url.getProtocol() + "://" + url.getHost();
         } catch (MalformedURLException e) {
             throw new WebPushException(e);
