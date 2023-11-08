@@ -10,14 +10,14 @@ Refactored and improved version of [WebPush](https://github.com/web-push-libs/we
 - OkHttp instead of httpcomponents
 - Reduced code, cleanups and refactorings
 - Fluent API
-- Requires Java 17
+- Requires Java 21
 
 Usage
 ------------------
 
 1. Add the WebPush4J dependency to your pom.xml:
 
-```xml
+```
 <dependency>
     <groupId>de.svenkubiak</groupId>
     <artifactId>webpush4j</artifactId>
@@ -27,24 +27,21 @@ Usage
 
 2. Create a Subscriber or load from e.g. database
 
-```java
+```
 String json = ... //Json from initial subscription
 Subscriber subscriber = Subscriber.from(json);
-```	
-
+```
 3. Create a notification
 
-```java
+```
 Notification notification = Notification.create()
     .withTitle("Hello!!")
     .withBody("New Message from your favorite Server.");
-```	
+```
 
 4. Send the notification to the subscriber
 
-Synchronous
-
-```java
+```
 try {
     WebPush.crerate()
 		.withPublicKey("PUBLIC KEY") //Vapid public key
@@ -56,13 +53,12 @@ try {
 } catch (WebPushException e) {
     e.printStackTrace();
 }
-```	
-
+```
 
 Full example
 ------------------
 
-```java
+```
 import de.svenkubiak.webpush4j.Notification;
 import de.svenkubiak.webpush4j.Subscriber;
 import de.svenkubiak.webpush4j.WebPush;
@@ -89,5 +85,4 @@ public class Main {
         }
     }
 }
-
-```	
+```
